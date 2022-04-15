@@ -1,6 +1,5 @@
 # HOP-REVERIE-Challenge
-
-This respository is the code of [HOP](https://arxiv.org/abs/2203.11591) for REVERIE-Challenge. The code is based on [Recurrent-VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT). Thanks to [Yicong Hong](https://github.com/YicongHong) for releasing the Recurrent-VLN-BERT code.
+This respository is the code of REVERIE-Challenge using [HOP](https://arxiv.org/abs/2203.11591). The code is based on [Recurrent-VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT). Thanks to [Yicong Hong](https://github.com/YicongHong) for releasing the Recurrent-VLN-BERT code.
 
 ## Prerequisites
 ### Installation
@@ -29,9 +28,9 @@ Please follow the instructions below to prepare the data in directories:
 - MP3D navigability graphs: `connectivity`
     - Download the [connectivity maps ](https://github.com/peteanderson80/Matterport3DSimulator/tree/master/connectivity).
 - MP3D image features: `img_features`
-    - Download the [Scene features [4.2GB]](https://www.dropbox.com/s/85tpa6tc3enl5ud/ResNet-152-places365.zip?dl=1) (ResNet-152-Places365).
+    - Download the [Scene features](https://www.dropbox.com/s/85tpa6tc3enl5ud/ResNet-152-places365.zip?dl=1) (ResNet-152-Places365).
 - REVERIE data: `data_v2`
-    - Download the [REVERIE data (https://github.com/YuankaiQi/REVERIE/tree/master/tasks/REVERIE/data_v2).
+    - Download the [REVERIE data](https://github.com/YuankaiQi/REVERIE/tree/master/tasks/REVERIE/data_v2).
 
 ### Initial HOP weights
 - Pre-trained HOP weights: `load/hop`
@@ -46,7 +45,7 @@ bash run/agent.bash
 ```bash
 bash run/test.bash
 ```
-- To Evaluate results on REVERIE seen and REVERIE unseen splits.
+- You can also evaluate results on REVERIE seen and REVERIE unseen splits.
 ```bash
 python ./r2r_src/eval.py
 ```
