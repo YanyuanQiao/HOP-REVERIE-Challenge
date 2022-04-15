@@ -4,7 +4,7 @@ This respository is the code of [HOP](https://arxiv.org/abs/2203.11591) for REVE
 
 ## Prerequisites
 ### Installation
-- Install docker
+- Install docker.
   Please check [here](https://docs.docker.com/engine/install/ubuntu/) to install docker.
 - Create container
   To pull the image: 
@@ -31,7 +31,7 @@ This respository is the code of [HOP](https://arxiv.org/abs/2203.11591) for REVE
 
 ### Training
 ```bash
-bash run/agent.bash
+bash run/train.bash
 ```
 ### Evaluating
 The generated `submit_test.json`
