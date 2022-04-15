@@ -33,12 +33,12 @@ class BaseAgent(object):
         self.losses = [] # For learning agents
 
     def write_results(self):
-        output = [{'instr_id': k, 'trajectory': v, 'ref': r} for k, (v,r) in self.results.items()]
+        output = [{'instr_id': k, 'trajectory': v, 'predObjId': r} for k, (v,r) in self.results.items()]
         with open(self.results_path, 'w') as f:
             json.dump(output, f)
 
     def get_results(self):
-        output = [{'instr_id': k, 'trajectory': v, 'ref': r} for k, (v,r) in self.results.items()]
+        output = [{'instr_id': k, 'trajectory': v, 'predObjId': r} for k, (v,r) in self.results.items()]
         return output
 
     def rollout(self, **args):
@@ -60,12 +60,17 @@ class BaseAgent(object):
         # We rely on env showing the entire batch before repeating anything
         looped = False
         self.loss = 0
+        #set_trace()
         if iters is not None:
             # For each time, it will run the first 'iters' iterations. (It was shuffled before)
             for i in range(iters):
                 for traj in self.rollout_test(**kwargs):
                     self.loss = 0
-                    self.results[traj['instr_id']] = (traj['path'], traj['ref'])
+                    if traj['predObjId'] is not None:
+                        traj_predObjId = int(traj['predObjId'])
+                        self.results[traj['instr_id']] = (traj['path'], traj_predObjId)
+                    else:
+                        self.results[traj['instr_id']] = (traj['path'], traj['predObjId'])                        
         else:   # Do a full round
             while True:
                 for traj in self.rollout_test(**kwargs):
@@ -73,7 +78,11 @@ class BaseAgent(object):
                         looped = True
                     else:
                         self.loss = 0
-                        self.results[traj['instr_id']] = (traj['path'], traj['ref'])
+                        if traj['predObjId'] is not None:
+                            traj_predObjId = int(traj['predObjId'])
+                            self.results[traj['instr_id']] = (traj['path'], traj_predObjId)
+                        else:
+                            self.results[traj['instr_id']] = (traj['path'], traj['predObjId'])  
                 if looped:
                     break
 
@@ -306,7 +315,7 @@ class Seq2SeqAgent(BaseAgent):
         traj = [{
             'instr_id': ob['instr_id'],
             'path': [(ob['viewpoint'], ob['heading'], ob['elevation'])],
-            'ref': None
+            'predObjId': None
         } for ob in perm_obs]
 
         # Init the reward shaping
@@ -410,7 +419,7 @@ class Seq2SeqAgent(BaseAgent):
                     if self.feedback == 'argmax':
                         _, ref_t = logit_REF[i].max(0)
                         if ref_t != obj_leng[i]-1:  # decide not to do REF
-                            traj[i]['ref'] = perm_obs[i]['candidate_obj'][2][ref_t]
+                            traj[i]['predObjId'] = perm_obs[i]['candidate_obj'][2][ref_t]
                 else:
                     just_ended[i] = False
 
@@ -587,7 +596,7 @@ class Seq2SeqAgent(BaseAgent):
         traj = [{
             'instr_id': ob['instr_id'],
             'path': [(ob['viewpoint'], ob['heading'], ob['elevation'])],
-            'ref': None
+            'predObjId': None
         } for ob in perm_obs]
 
         # Init the reward shaping
@@ -690,7 +699,7 @@ class Seq2SeqAgent(BaseAgent):
                     if self.feedback == 'argmax':
                         _, ref_t = logit_REF[i].max(0)
                         if ref_t != obj_leng[i]-1:  # decide not to do REF
-                            traj[i]['ref'] = perm_obs[i]['candidate_obj'][2][ref_t]
+                            traj[i]['predObjId'] = perm_obs[i]['candidate_obj'][2][ref_t]
                 else:
                     just_ended[i] = False
 

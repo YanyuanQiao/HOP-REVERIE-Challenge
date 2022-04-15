@@ -2,6 +2,7 @@
 
 import json
 import os
+import os.path as osp
 import sys
 from collections import defaultdict
 import networkx as nx
@@ -9,16 +10,11 @@ import numpy as np
 import pprint
 pp = pprint.PrettyPrinter(indent=4)
 
-from env import R2RBatch
-import utils
-from utils import load_datasets, load_nav_graphs, ndtw_graphload, DTW
-from agent import BaseAgent
-from ipdb import set_trace
 
 class Evaluation(object):
     ''' Results submission format:  [{'instr_id': string, 'trajectory':[(viewpoint_id, heading_rads, elevation_rads),] } ] '''
 
-    def __init__(self, splits, scans, tok):
+    def __init__(self, splits, scans=None, tok=None):
         self.error_margin = 3.0
         self.splits = splits
         self.tok = tok
@@ -41,19 +37,7 @@ class Evaluation(object):
         self.distances = {}
         for scan,G in self.graphs.items(): # compute all shortest paths
             self.distances[scan] = dict(nx.all_pairs_dijkstra_path_length(G))
-        self.objProposals, self.obj2viewpoint = utils.loadObjProposals(self.objpos,self.vppos)
-
-        # self.ndtw_criterion = {}
-        # scan_gts_dir = '/home/yicong/research/selfmonitoring-agent/tasks/Env-back/data_v2id_paths.json'
-        # with open(scan_gts_dir) as f_:
-        #     self.scan_gts = json.load(f_)
-        # all_scan_ids = []
-        # for key in self.scan_gts:
-        #     path_scan_id = self.scan_gts[key][0]
-        #     if path_scan_id not in all_scan_ids:
-        #         all_scan_ids.append(path_scan_id)
-        #         ndtw_graph = ndtw_graphload(path_scan_id)
-        #         self.ndtw_criterion[path_scan_id] = DTW(ndtw_graph)
+        self.objProposals, self.obj2viewpoint = loadObjProposals(self.objpos,self.vppos)
 
     def _get_nearest(self, scan, goal_id, path):
         near_id = path[0][0]
@@ -75,8 +59,6 @@ class Evaluation(object):
         goal = gt['path'][-1]
         final_position = path[-1][0]    # the first of [view_id, angle, vofv]
         nearest_position = self._get_nearest(gt['scan'], goal, path)
-        # self.scores['nav_errors'].append(self.distances[gt['scan']][final_position][goal])
-        # self.scores['oracle_errors'].append(self.distances[gt['scan']][nearest_position][goal])
         self.scores['trajectory_steps'].append(len(path)-1)
 
         distance = 0 # Work out the length of the path in meters
@@ -88,9 +70,8 @@ class Evaluation(object):
         self.scores['shortest_lengths'].append(
             self.distances[gt['scan']][start][goal]
         )
-
         # REF sucess or not
-        if ref_objId == str(gt['objId']):
+        if ref_objId == gt['objId']:
             self.scores['rgs'].append(1)
         else:
             self.scores['rgs'].append(0)
@@ -113,31 +94,6 @@ class Evaluation(object):
                     break
         self.scores['oracle_visible'].append(oracle_succ)
 
-
-        # # if self.scores['nav_errors'][-1] < self.error_margin:
-        # # print('item', item)
-        # ndtw_path = [k[0] for k in item['trajectory']]
-        # # print('path', ndtw_path)
-        #
-        # path_id = item['instr_id'][:-2]
-        # # print('path id', path_id)
-        # path_scan_id, path_ref = self.scan_gts[path_id]
-        # # print('path_scan_id', path_scan_id)
-        # # print('path_ref', path_ref)
-        #
-        # path_act = []
-        # for jdx, pid in enumerate(ndtw_path):
-        #     if jdx != 0:
-        #         if pid != path_act[-1]:
-        #             path_act.append(pid)
-        #     else:
-        #         path_act.append(pid)
-        # # print('path act', path_act)
-        #
-        # ndtw_score = self.ndtw_criterion[path_scan_id](path_act, path_ref, metric='ndtw')
-        # ndtw_scores.append(ndtw_score)
-        # print('nDTW score: ', np.average(ndtw_scores))
-
     def score(self, output_file):
         ''' Evaluate each agent trajectory based on how close it got to the goal location '''
         self.scores = defaultdict(list)
@@ -153,7 +109,7 @@ class Evaluation(object):
             # Check against expected ids
             if item['instr_id'] in instr_ids:
                 instr_ids.remove(item['instr_id'])
-                self._score_item(item['instr_id'], item['trajectory'], item['ref'])
+                self._score_item(item['instr_id'], item['trajectory'], item['predObjId'])
 
         if 'train' not in self.splits:  # Exclude the training from this. (Because training eval may be partial)
             assert len(instr_ids) == 0, 'Missing %d of %d instruction ids from %s - not in %s'\
@@ -175,9 +131,6 @@ class Evaluation(object):
         ]
         score_summary['spl'] = np.average(spl)
 
-        #set_trace()
-
-#        assert len(self.scores['rgs']) == len(self.instr_ids)
         num_rgs = sum(self.scores['rgs'])
         score_summary['rgs'] = float(num_rgs)/float(len(self.scores['rgs']))
 
@@ -193,6 +146,7 @@ class Evaluation(object):
         from bleu import compute_bleu
         refs = []
         candidates = []
+        set_trace()
         for path_id, inst in path2inst.items():
             path_id = str(path_id)
             assert path_id in self.gt
@@ -206,24 +160,117 @@ class Evaluation(object):
 
         return bleu_score, precisions
 
+def loadObjProposals(objpos,vppos):
+    bboxDir = 'data_v2/BBoxes_v2'
+    objProposals = {}
+    obj2viewpoint = {}
 
-RESULT_DIR = 'tasks/R2R/results/'
+    for efile in os.listdir(bboxDir):
+        if efile.endswith('.json'):
+            with open(osp.join(bboxDir, efile)) as f:
+                scan = efile.split('_')[0]
+                scanvp, _ = efile.split('.')
+                data = json.load(f)
 
-def eval_simple_agents():
-    ''' Run simple baselines on each split. '''
-    for split in ['train', 'val_seen', 'val_unseen', 'test']:
-        env = R2RBatch(None, batch_size=1, splits=[split])
-        ev = Evaluation([split])
+                # for a viewpoint (for loop not needed)
+                for vp, vv in data.items():
+                    # for all visible objects at that viewpoint
+                    for objid, objinfo in vv.items():
+                        if scanvp not in vppos:
+                            continue
+                        if objinfo['visible_pos']:
+                            distance = ((vppos[scanvp][0]-objpos[scan][objid][0])**2\
+                                + (vppos[scanvp][1]-objpos[scan][objid][1])**2\
+                                + (vppos[scanvp][2]-objpos[scan][objid][2])**2)**0.5
+                            if distance<=3.0:
+                                # if such object not already in the dict
+                                if obj2viewpoint.__contains__(scan+'_'+objid):
+                                    if vp not in obj2viewpoint[scan+'_'+objid]:
+                                        obj2viewpoint[scan+'_'+objid].append(vp)
+                                else:
+                                    obj2viewpoint[scan+'_'+objid] = [vp,]
 
-        for agent_type in ['Stop', 'Shortest', 'Random']:
-            outfile = '%s%s_%s_agent.json' % (RESULT_DIR, split, agent_type.lower())
-            agent = BaseAgent.get_agent(agent_type)(env, outfile)
-            agent.test()
-            agent.write_results()
-            score_summary, _ = ev.score(outfile)
-            print('\n%s' % agent_type)
-            pp.pprint(score_summary)
+                                # if such object not already in the dict
+                                if objProposals.__contains__(scanvp):
+                                    for ii, bbox in enumerate(objinfo['bbox2d']):
+                                        objProposals[scanvp]['bbox'].append(bbox)
+                                        objProposals[scanvp]['visible_pos'].append(objinfo['visible_pos'][ii])
+                                        objProposals[scanvp]['objId'].append(objid)
 
+                                else:
+                                    objProposals[scanvp] = {'bbox': objinfo['bbox2d'],
+                                                            'visible_pos': objinfo['visible_pos']}
+                                    objProposals[scanvp]['objId'] = []
+                                    for _ in objinfo['visible_pos']:
+                                        objProposals[scanvp]['objId'].append(objid)
+
+    return objProposals, obj2viewpoint
+
+def load_datasets(splits):
+    """
+
+    :param splits: A list of split.
+        if the split is "something@5000", it will use a random 5000 data from the data
+    :return:
+    """
+    import random
+    data = []
+    old_state = random.getstate()
+    for split in splits:
+        # It only needs some part of the dataset?
+        components = split.split("@")
+        number = -1
+        if len(components) > 1:
+            split, number = components[0], int(components[1])
+
+        if "/" not in split:
+            with open('data_v2/REVERIE_%s.json' % split) as f:
+                new_data = json.load(f)
+        else:
+            with open(split) as f:
+                new_data = json.load(f)
+
+        # Partition
+        if number > 0:
+            random.seed(0)              # Make the data deterministic, additive
+            random.shuffle(new_data)
+            new_data = new_data[:number]
+
+        # Join
+        data += new_data
+    random.setstate(old_state)      # Recover the state of the random generator
+    return data
+
+def load_nav_graphs(scans, rtnpos=False):
+    ''' Load connectivity graph for each scan '''
+    vppos={}
+    def distance(pose1, pose2):
+        ''' Euclidean distance between two graph poses '''
+        return ((pose1['pose'][3]-pose2['pose'][3])**2\
+          + (pose1['pose'][7]-pose2['pose'][7])**2\
+          + (pose1['pose'][11]-pose2['pose'][11])**2)**0.5
+
+    graphs = {}
+    for scan in scans:
+        with open('connectivity/%s_connectivity.json' % scan) as f:
+            G = nx.Graph()
+            positions = {}
+            data = json.load(f)
+            for i,item in enumerate(data):
+                if item['included']:
+                    for j,conn in enumerate(item['unobstructed']):
+                        if conn and data[j]['included']:
+                            positions[item['image_id']] = np.array([item['pose'][3],
+                                    item['pose'][7], item['pose'][11]])
+                            vppos[scan+'_'+item['image_id']] = positions[item['image_id']]
+                            assert data[j]['unobstructed'][i], 'Graph should be undirected'
+                            G.add_edge(item['image_id'],data[j]['image_id'],weight=distance(item,data[j]))
+            nx.set_node_attributes(G, values=positions, name='position')
+            graphs[scan] = G
+    if rtnpos:
+        return graphs, vppos
+    else:
+        return graphs
 
 def eval_seq2seq():
     ''' Eval sequence to sequence models on val splits (iteration selected from training error) '''
@@ -240,4 +287,12 @@ def eval_seq2seq():
 
 
 if __name__ == '__main__':
-    eval_simple_agents()
+    # eval val_seen and val_unseen
+    splits = ['val_seen','val_unseen']
+    resfile ='your file path/submit_%s.json'
+    for split in splits:
+        eval = Evaluation([split])
+        score_summary, _ = eval.score(resfile%split)
+        print(score_summary)
+
+

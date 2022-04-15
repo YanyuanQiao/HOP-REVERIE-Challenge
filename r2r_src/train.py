@@ -42,7 +42,7 @@ print(args); print('')
 
 
 ''' train the listener '''
-def train(train_env, tok, n_iters, log_every=500, val_envs={}, aug_env=None):
+def train(train_env, tok, n_iters, log_every=10, val_envs={}, aug_env=None):
     writer = SummaryWriter(log_dir=log_dir)
     listner = Seq2SeqAgent(train_env, "", tok, args.maxAction)
 
@@ -171,7 +171,6 @@ def valid(train_env, tok, val_envs={}):
         iters = None
         agent.test(use_dropout=False, feedback='argmax', iters=iters)
         result = agent.get_results()
-        
         if env_name != '':
             if env_name != 'test':
                 score_summary, _ = evaluator.score(result)
@@ -220,7 +219,7 @@ def train_val(test_only=False):
 
     if args.submit:
         val_env_names = ['val_seen','val_unseen','test']
-        #val_env_names = ['test']
+        val_env_names = ['val_seen']
     else:
         pass
 
