@@ -1,5 +1,5 @@
 # HOP-REVERIE-Challenge
-This respository is the code of REVERIE-Challenge using [HOP](https://arxiv.org/abs/2203.11591). The code is based on [Recurrent-VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT). Thanks to [Yicong Hong](https://github.com/YicongHong) for releasing the Recurrent-VLN-BERT code.
+This respository is the code of [REVERIE-Challenge](https://yuankaiqi.github.io/REVERIE_Challenge/) using [HOP](https://arxiv.org/abs/2203.11591). The code is based on [Recurrent-VLN-BERT](https://github.com/YicongHong/Recurrent-VLN-BERT). Thanks to [Yicong Hong](https://github.com/YicongHong) for releasing the Recurrent-VLN-BERT code.
 
 ## Prerequisites
 ### Installation
