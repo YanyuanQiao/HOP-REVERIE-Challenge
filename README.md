@@ -4,7 +4,7 @@ This respository is the code of [HOP](https://arxiv.org/abs/2203.11591) for REVE
 
 ## Prerequisites
 ### Installation
-- Install docker.
+- Install docker
   Please check [here](https://docs.docker.com/engine/install/ubuntu/) to install docker.
 - Create container
   To pull the image: 
@@ -23,19 +23,31 @@ This respository is the code of [HOP](https://arxiv.org/abs/2203.11591) for REVE
   ```
 
 ### Data Preparation
-* Please check [here](https://github.com/YuankaiQi/REVERIE) to download data.
+
+Please follow the instructions below to prepare the data in directories:
+
+- MP3D navigability graphs: `connectivity`
+    - Download the [connectivity maps ](https://github.com/peteanderson80/Matterport3DSimulator/tree/master/connectivity).
+- MP3D image features: `img_features`
+    - Download the [Scene features [4.2GB]](https://www.dropbox.com/s/85tpa6tc3enl5ud/ResNet-152-places365.zip?dl=1) (ResNet-152-Places365).
+- REVERIE data: `data_v2`
+    - Download the [REVERIE data (https://github.com/YuankaiQi/REVERIE/tree/master/tasks/REVERIE/data_v2).
 
 ### Initial HOP weights
-- Pre-trained HOP weights: `load`
+- Pre-trained HOP weights: `load/hop`
   - Download the `pytorch_model.bin` from [here](https://drive.google.com/drive/folders/1RtGij0T8__xrlhmVjFWqbQW2NYrcjK-R?usp=sharing).
 
 ### Training
 ```bash
-bash run/train.bash
+bash run/agent.bash
 ```
 ### Evaluating
-The generated `submit_test.json`
+- To generate `submit_test.json`
 ```bash
 bash run/test.bash
+```
+- To Evaluate results on REVERIE seen and REVERIE unseen splits.
+```bash
+python ./r2r_src/eval.py
 ```
 
