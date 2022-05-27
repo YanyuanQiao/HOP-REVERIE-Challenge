@@ -43,7 +43,7 @@ Please follow the instructions below to prepare the data in directories:
     ├── REVERIE_val_seen.json
     ├── REVERIE_val_unseen.json
     ├── REVERIE_test.json
-    └── objpos.jsn
+    └── objpos.json
 ```
 
 ### Initial HOP weights
