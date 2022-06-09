@@ -31,7 +31,7 @@ Please follow the instructions below to prepare the data in directories:
     - Download the [Scene features](https://www.dropbox.com/s/85tpa6tc3enl5ud/ResNet-152-places365.zip?dl=1) (ResNet-152-Places365).
 - REVERIE data: `data_v2`
     - Download the [REVERIE data](https://github.com/YuankaiQi/REVERIE/tree/master/tasks/REVERIE/data_v2).
-    - Download the object features [reverie_obj_feats_v2.pkl](https://drive.google.com/file/d/1zwV3QDPUVt7YmBNqTaCdS6v01U4b6p7M/view?usp=sharing)
+    - Download the object features [reverie_obj_feats_v2.pkl] from [Google Drive](https://drive.google.com/file/d/1zwV3QDPUVt7YmBNqTaCdS6v01U4b6p7M/view?usp=sharing) or [Baidu Cloud Disk](https://pan.baidu.com/s/1hxNypQZLz21RQpMD6yQNag?pwd=nubg) [code: nubg].
 
 - After downloading data you should see the following folder structure:
 ```
