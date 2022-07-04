@@ -10,6 +10,10 @@ This respository is the code of [REVERIE-Challenge](https://yuankaiqi.github.io/
   ```sh
   docker pull starrychiao/hop-recurrent:v1
   ```
+  If your CUDA version is 11.3, you can pull the image:
+  ```sh
+  docker push starrychiao/vlnbert-2022-3090:tagname
+  ```
   To create the container:
   ```sh
   docker run -it --ipc host  --shm-size=1024m --gpus all --name your_name  --volume "your_directory":/root/mount/Matterport3DSimulator starrychiao/hop-recurrent:v1
@@ -32,6 +36,7 @@ Please follow the instructions below to prepare the data in directories:
 - REVERIE data: `data_v2`
     - Download the [REVERIE data](https://github.com/YuankaiQi/REVERIE/tree/master/tasks/REVERIE/data_v2).
     - Download the object features [reverie_obj_feats_v2.pkl] from [Google Drive](https://drive.google.com/file/d/1zwV3QDPUVt7YmBNqTaCdS6v01U4b6p7M/view?usp=sharing) or [Baidu Cloud Disk](https://pan.baidu.com/s/1hxNypQZLz21RQpMD6yQNag?pwd=nubg) [code: nubg].
+- [objpos.json](https://drive.google.com/file/d/1F0e1x43JZwjrqLSCmN0emMMxX7FRQbkL/view?usp=sharing)
 
 - After downloading data you should see the following folder structure:
 ```
